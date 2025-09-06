@@ -14,6 +14,24 @@ import numpy as np
 import json
 from dotenv import load_dotenv
 
+# ==================== HEALTH CHECK PARA RENDER ====================
+from flask import Flask
+from threading import Thread
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "🤖 Bot Discord Online - Torneio de Jogos"
+
+def run_flask():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = Thread(target=run_flask)
+    t.daemon = True  # Faz a thread morrer quando o main thread morrer
+    t.start()
+
 # ==================== CONFIGURAÇÃO SEGURA ====================
 load_dotenv()
 
@@ -101,6 +119,7 @@ def salvar_usuarios_excluidos():
 # ==================== EVENTOS DO BOT ====================
 @bot.event
 async def on_ready():
+    keep_alive()  # ⬅️ HEALTH CHECK PARA RENDER
     print(f'{bot.user} está online!')
     print(f'Conectado aos servidores: {[guild.name for guild in bot.guilds]}')
     carregar_usuarios_excluidos()
@@ -115,7 +134,9 @@ async def on_ready():
 @tasks.loop(hours=24)
 async def enviar_pesquisa():
     agora = datetime.datetime.now(pytz.timezone('America/Sao_Paulo'))
-    if agora.hour == 9 and agora.minute == 0:
+    
+    # ENVIA APENAS SEGUNDA A SEXTA (0-4 = Segunda a Sexta)
+    if agora.hour == 9 and agora.minute == 0 and agora.weekday() < 5:
         print("Enviando pesquisas diárias para todos os membros...")
         
         for guild in bot.guilds:
@@ -167,11 +188,14 @@ async def enviar_pesquisa():
                         print(f"Erro ao enviar mensagem para {member.display_name}: {e}")
                 elif str(member.id) in USUARIOS_EXCLUIDOS:
                     print(f"⏭️ Pulando {member.display_name} (usuário excluído)")
+    
+    elif agora.hour == 9 and agora.minute == 0:
+        print("⏭️ Fim de semana - pulando envio de pesquisas")
 
 @enviar_pesquisa.before_loop
 async def before_enviar_pesquisa():
     await bot.wait_until_ready()
-    print("Agendando envio diário para 9h (horário de Brasília)")
+    print("Agendando envio diário para 9h (horário de Brasília) - apenas dias úteis")
     
     agora = datetime.datetime.now(pytz.timezone('America/Sao_Paulo'))
     if agora.time() > time(9, 0):
@@ -276,7 +300,7 @@ async def salvar_no_google_sheets(user):
 @tasks.loop(hours=24)
 async def enviar_relatorio():
     agora = datetime.datetime.now(pytz.timezone('America/Sao_Paulo'))
-    if agora.weekday() == 6 and agora.hour == 10:
+    if agora.weekday() == 6 and agora.hour == 10:  # Domingo às 10h
         print("Gerando relatórios semanais...")
         await gerar_relatorios_semanais()
 
@@ -349,7 +373,7 @@ async def gerar_relatorios_semanais():
                     # Preenchimento abaixo da linha
                     plt.fill_between(labels_x, sentimentos_valores, alpha=0.2, color='#3498db')
                     
-                    # Configurações do gráfico
+                                        # Configurações do gráfico
                     plt.title(f"📈 Evolução de Sentimentos - {registros[0]['usuario']}\nSemana: {datas_formatadas[0]} a {datas_formatadas[-1]}", 
                              fontsize=16, fontweight='bold', pad=20, color='#2c3e50')
                     
@@ -525,7 +549,7 @@ async def status(ctx):
         description="Bot está online e funcionando perfeitamente!",
         color=0x2ecc71
     )
-    embed.add_field(name="Próxima pesquisa", value="9h (horário de Brasília)", inline=True)
+    embed.add_field(name="Próxima pesquisa", value="9h (horário de Brasília) - Dias úteis", inline=True)
     embed.add_field(name="Próximo relatório", value="Domingo às 10h", inline=True)
     embed.add_field(name="Membros no servidor", value=len(ctx.guild.members), inline=True)
     embed.add_field(name="Usuários excluídos", value=len(USUARIOS_EXCLUIDOS), inline=True)

@@ -8,4 +8,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
+# Expose a porta para o health check
+EXPOSE 8080
+
 CMD ["python", "bot_torneio.py"]
