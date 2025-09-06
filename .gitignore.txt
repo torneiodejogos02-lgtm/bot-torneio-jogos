@@ -1,0 +1,30 @@
+# Arquivos sensíveis - NUNCA subir!
+credentials.json
+.env
+*.token
+config.json
+secrets.py
+usuarios_excluidos.txt
+
+# Arquivos temporários
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+logs/
+
+# Ambiente virtual
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
