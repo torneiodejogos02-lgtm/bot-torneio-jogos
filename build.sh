@@ -1,4 +1,0 @@
-#!/bin/bash
-pip install --upgrade pip
-pip install setuptools==68.2.2 wheel
-pip install -r requirements.txt

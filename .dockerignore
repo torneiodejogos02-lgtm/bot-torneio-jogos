@@ -1,0 +1,7 @@
+.git
+.gitignore
+.env
+credentials.json
+__pycache__
+*.pyc
+usuarios_excluidos.txt
